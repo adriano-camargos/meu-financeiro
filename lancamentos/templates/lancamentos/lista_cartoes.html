@@ -1,0 +1,87 @@
+{% extends 'lancamentos/base.html' %}
+{% load static %}
+
+{% block title %}
+    Meus Cartões de Crédito
+{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>Meus Cartões de Crédito</h1>
+            <a href="{% url 'novo_cartao' %}" class="btn btn-primary">+ Adicionar Novo Cartão</a>
+        </div>
+    </div>
+    <hr>
+    
+    <div class="row">
+        {% for cartao in cartoes_com_limite %}
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">{{ cartao.nome }}</h5>
+                        <div>
+                            <a href="{% url 'editar_cartao' cartao.id %}" class="btn btn-warning btn-sm">Editar</a>
+                            <a href="{% url 'deletar_cartao' cartao.id %}" class="btn btn-danger btn-sm">Deletar</a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted">Vencimento: dia {{ cartao.dia_vencimento }} | Fechamento: dia {{ cartao.dia_fechamento }}</h6>
+                        
+                        <div class="row text-center mt-3">
+                            <div class="col-4">
+                                <strong>Limite Total</strong>
+                                <p class="fs-5 text-primary">R$ <span class="valor-sensivel"><span class="real">{{ cartao.limite|floatformat:2 }}</span><span class="oculto">****</span></span></p>
+                            </div>
+                            <div class="col-4">
+                                <strong>Faturas em Aberto</strong>
+                                <p class="fs-5 text-warning" title="Soma de todas as parcelas futuras">R$ <span class="valor-sensivel"><span class="real">{{ cartao.total_faturas_futuras|floatformat:2 }}</span><span class="oculto">****</span></span></p>
+                            </div>
+                            <div class="col-4">
+                                <strong>Limite Disponível</strong>
+                                <p class="fs-5 {% if cartao.limite_disponivel >= 0 %}text-success{% else %}text-danger{% endif %}">R$ <span class="valor-sensivel"><span class="real">{{ cartao.limite_disponivel|floatformat:2 }}</span><span class="oculto">****</span></span></p>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <h6>Resumo das Próximas Faturas ({{ cartao.nome }})</h6>
+                            <table class="table table-sm table-striped">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Vencimento</th>
+                                        <th>Valor da Fatura</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for fatura in cartao.resumo_faturas %}
+                                    <tr>
+                                        <td>{{ fatura.mes_ano_str }}</td>
+                                        <td>R$ <span class="valor-sensivel"><span class="real">{{ fatura.total|floatformat:2 }}</span><span class="oculto">****</span></span></td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="2" class="text-center text-muted small">Nenhuma fatura em aberto.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr class="fw-bold">
+                                        <td class="text-end">Total Futuro:</td>
+                                        <td>R$ <span class="valor-sensivel"><span class="real">{{ cartao.total_faturas_futuras|floatformat:2 }}</span><span class="oculto">****</span></span></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    Você ainda não cadastrou nenhum cartão de crédito. <a href="{% url 'novo_cartao' %}" class="alert-link">Clique aqui para adicionar seu primeiro cartão.</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+{% endblock %}

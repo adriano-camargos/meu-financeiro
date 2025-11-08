@@ -1,0 +1,38 @@
+{% extends 'lancamentos/base.html' %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <h2 class="mb-4">Entrar no Sistema</h2>
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            Seu nome de usuário ou senha estão incorretos. Tente novamente.
+                        </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label">Usuário:</label>
+                        <input type="text" name="username" id="id_username" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_password" class="form-label">Senha:</label>
+                        <input type="password" name="password" id="id_password" class="form-control" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Entrar</button>
+                </form>
+            </div>
+            <div class="card-footer text-center">
+                <a href="{% url 'registrar' %}">Ainda não tem uma conta? Cadastre-se</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

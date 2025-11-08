@@ -1,0 +1,160 @@
+{% extends 'lancamentos/base.html' %}
+
+{% block title %}
+    Dashboard Macro-Categorias
+{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>Dashboard por Macro-Categoria</h1>
+            <h2>Análise de Gastos de {{ mes_selecionado_nome }}/{{ ano_selecionado }}</h2>
+             <small class="text-muted">Métodos incluídos: {{ metodos_selecionados|join:", " }}</small>
+        </div>
+    </div>
+    <hr>
+    
+    <form method="GET" class="card card-body mb-4">
+        <h5 class="card-title">Filtros</h5>
+        <div class="row g-3 align-items-center mb-3">
+            <div class="col-md-2">
+                <label for="mes" class="form-label">Mês:</label>
+                <select name="mes" id="mes" class="form-select">
+                    {% for num, nome in meses %}
+                    <option value="{{ num }}" {% if num == mes_selecionado %}selected{% endif %}>{{ nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="ano" class="form-label">Ano:</label>
+                <select name="ano" id="ano" class="form-select">
+                    {% for ano in anos %}
+                    <option value="{{ ano }}" {% if ano == ano_selecionado %}selected{% endif %}>{{ ano }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label d-block">Métodos de Pagamento:</label>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="metodos" value="Crédito" id="checkCredito" {% if 'Crédito' in metodos_selecionados %}checked{% endif %}>
+                    <label class="form-check-label" for="checkCredito">Crédito</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="metodos" value="Débito" id="checkDebito" {% if 'Débito' in metodos_selecionados %}checked{% endif %}>
+                    <label class="form-check-label" for="checkDebito">Débito</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="metodos" value="PIX" id="checkPIX" {% if 'PIX' in metodos_selecionados %}checked{% endif %}>
+                    <label class="form-check-label" for="checkPIX">PIX</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="metodos" value="Dinheiro" id="checkDinheiro" {% if 'Dinheiro' in metodos_selecionados %}checked{% endif %}>
+                    <label class="form-check-label" for="checkDinheiro">Dinheiro</label>
+                </div>
+                 <small class="d-block text-muted">(Deixe todos desmarcados para incluir todos)</small>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-success w-100">Filtrar</button>
+            </div>
+        </div>
+    </form>
+
+    <div class="row mt-5">
+        <div class="col-md-6">
+            <canvas id="myPieChart"></canvas>
+        </div>
+        <div class="col-md-6">
+            <h4 id="detalhes-titulo">Detalhes da Macro-Categoria</h4>
+            <div id="detalhes-container">
+                <p class="text-muted">Clique em uma fatia do gráfico para ver os detalhes.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        function fetchDetails(macroCategoria) {
+            const mes = {{ mes_selecionado }};
+            const ano = {{ ano_selecionado }};
+            const metodosSelecionados = Array.from(document.querySelectorAll('input[name="metodos"]:checked')).map(cb => cb.value).join(',');
+            const url = `/api/detalhes-macro-categoria/?mes=${mes}&ano=${ano}&macro_categoria=${encodeURIComponent(macroCategoria)}&metodos=${encodeURIComponent(metodosSelecionados)}`;
+
+            const detalhesContainer = document.getElementById('detalhes-container');
+            const detalhesTitulo = document.getElementById('detalhes-titulo');
+            detalhesTitulo.innerText = `Detalhes de ${macroCategoria}`;
+            detalhesContainer.innerHTML = '<p>Carregando...</p>';
+            fetch(url)
+                .then(response => { if (!response.ok) { throw new Error('Erro na rede'); } return response.json(); })
+                .then(data => {
+                     if (!data.lancamentos || data.lancamentos.length === 0) {
+                        detalhesContainer.innerHTML = '<p>Nenhum lançamento encontrado para esta macro-categoria/métodos no período.</p>';
+                        return;
+                    }
+                    let tableHtml = '<table class="table table-sm table-striped">';
+                    tableHtml += '<thead><tr><th>Data</th><th>Local</th><th>Descrição</th><th>Valor</th></tr></thead>';
+                    tableHtml += '<tbody>';
+                    data.lancamentos.forEach(lancamento => {
+                        const valor = lancamento.valor_parcela || lancamento.valor_total;
+                        tableHtml += `
+                            <tr>
+                                <td>${lancamento.data_compra}</td>
+                                <td>${lancamento.local}</td>
+                                <td>${lancamento.descricao || '-'}</td>
+                                <td>R$ <span class="valor-sensivel"><span class="real">${valor}</span><span class="oculto">****</span></span></td>
+                            </tr>`;
+                    });
+                    tableHtml += '</tbody></table>';
+                    detalhesContainer.innerHTML = tableHtml;
+                })
+                .catch(error => {
+                    detalhesContainer.innerHTML = '<p class="text-danger">Ocorreu um erro ao buscar os detalhes.</p>';
+                    console.error('Erro:', error);
+                });
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const ctx = document.getElementById('myPieChart').getContext('2d');
+            const labels = {{ labels|safe }};
+            const data = {{ data|safe }};
+            const total = data.reduce((sum, value) => sum + value, 0);
+
+            const myPieChart = new Chart(ctx, {
+                type: 'pie',
+                data: { labels: labels, datasets: [{ label: 'Gastos por Macro-Categoria', data: data, backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'], }] },
+                options: {
+                    responsive: true,
+                    plugins: { 
+                        legend: { position: 'top' }, 
+                        title: { display: true, text: 'Distribuição de Gastos por Macro-Categoria' }, 
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    // Lê o estado global definido em base.html
+                                    if (window.valoresVisiveis === false) {
+                                        return context.label + ': R$ ****';
+                                    }
+                                    let label = context.label || '';
+                                    let value = context.raw;
+                                    let percentage = total > 0 ? ((value / total) * 100).toFixed(2) : 0;
+                                    return `${label}: R$ ${value.toFixed(2)} (${percentage}%)`;
+                                }
+                            }
+                        } 
+                    },
+                    onClick: (event, elements, chart) => {
+                        if (elements.length > 0) {
+                            const dataIndex = elements[0].index;
+                            const macroCategoriaClicada = chart.data.labels[dataIndex];
+                            fetchDetails(macroCategoriaClicada);
+                        }
+                    }
+                }
+            });
+            
+            // Ouve o evento customizado de 'base.html' para atualizar o gráfico
+            window.addEventListener('visibilidadeValoresAlterada', () => {
+                myPieChart.update();
+            });
+        });
+    </script>
+{% endblock %}

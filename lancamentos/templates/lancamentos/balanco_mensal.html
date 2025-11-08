@@ -1,0 +1,79 @@
+{% extends 'lancamentos/base.html' %}
+
+{% block title %}
+    Balanço Mensal
+{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>Balanço Mensal</h1>
+            <h2>Resumo de {{ mes_selecionado_nome }}/{{ ano_selecionado }}</h2>
+        </div>
+    </div>
+    <hr>
+    
+    <form method="GET" class="row g-3 align-items-center mb-4">
+        <div class="col-auto">
+            <label for="mes" class="form-label">Mês:</label>
+            <select name="mes" id="mes" class="form-select">
+                {% for num, nome in meses %}
+                <option value="{{ num }}" {% if num == mes_selecionado %}selected{% endif %}>{{ nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-auto">
+            <label for="ano" class="form-label">Ano:</label>
+            <select name="ano" id="ano" class="form-select">
+                {% for ano in anos %}
+                <option value="{{ ano }}" {% if ano == ano_selecionado %}selected{% endif %}>{{ ano }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-auto mt-4">
+            <button type="submit" class="btn btn-success">Filtrar</button>
+        </div>
+    </form>
+
+    <div class="row mt-5">
+        <div class="col-md-4">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-header">Total de Receitas</div>
+                <div class="card-body">
+                    <h4 class="card-title">
+                        R$ <span class="valor-sensivel">
+                            <span class="real">{{ total_receitas|floatformat:2 }}</span>
+                            <span class="oculto">****</span>
+                        </span>
+                    </h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-danger mb-3">
+                <div class="card-header">Total de Despesas</div>
+                <div class="card-body">
+                    <h4 class="card-title">
+                        R$ <span class="valor-sensivel">
+                            <span class="real">{{ total_despesas|floatformat:2 }}</span>
+                            <span class="oculto">****</span>
+                        </span>
+                    </h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-dark {% if saldo >= 0 %}bg-info{% else %}bg-warning{% endif %} mb-3">
+                <div class="card-header">Saldo do Mês</div>
+                <div class="card-body">
+                    <h4 class="card-title">
+                        R$ <span class="valor-sensivel">
+                            <span class="real">{{ saldo|floatformat:2 }}</span>
+                            <span class="oculto">****</span>
+                        </span>
+                    </h4>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

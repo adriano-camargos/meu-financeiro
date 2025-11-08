@@ -1,0 +1,24 @@
+{% extends 'lancamentos/base.html' %}
+
+{% block title %}Confirmar Deleção{% endblock %}
+
+{% block content %}
+    <h1>Você tem certeza?</h1>
+    <p>Você está prestes a deletar permanentemente o cartão:</p>
+    <p><strong>"{{ cartao.nome }}"</strong></p>
+    
+    {% if erro_lancamentos %}
+        <div class="alert alert-danger">
+            <strong>Não é possível deletar este cartão!</strong><br>
+            Ele está sendo usado por {{ lancamentos_count }} lançamento(s). Por favor, edite esses lançamentos e associe-os a outro cartão antes de deletar.
+        </div>
+        <a href="{% url 'lista_cartoes' %}" class="btn btn-secondary">Voltar</a>
+    {% else %}
+        <p class="text-danger">Esta ação não pode ser desfeita.</p>
+        <form method="POST">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Sim, tenho certeza</button>
+            <a href="{% url 'lista_cartoes' %}" class="btn btn-secondary">Cancelar</a>
+        </form>
+    {% endif %}
+{% endblock %}

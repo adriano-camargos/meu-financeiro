@@ -1,0 +1,15 @@
+{% extends 'lancamentos/base.html' %}
+
+{% block title %}Confirmar Deleção{% endblock %}
+
+{% block content %}
+    <h1>Você tem certeza?</h1>
+    <p>Você está prestes a deletar permanentemente a receita:</p>
+    <p><strong>"{{ receita.descricao }} - R$ {{ receita.valor }}"</strong></p>
+
+    <form method="POST">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Sim, tenho certeza</button>
+        <a href="{% url 'lista_receitas' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends 'lancamentos/base.html' %}
+
+{% block title %}
+    Extrato Mensal Completo
+{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>Extrato Mensal Completo</h1>
+            <a href="{% url 'novo_lancamento' %}" class="btn btn-primary">+ Adicionar Novo Lançamento</a>
+        </div>
+        <div class="text-end">
+            <h2>Gastos de {{ mes_selecionado_nome }}/{{ ano_selecionado }}</h2>
+            <h3>Total: <span class="badge bg-danger">R$ <span class="valor-sensivel"><span class="real">{{ total_gastos|floatformat:2 }}</span><span class="oculto">****</span></span></span></h3>
+        </div>
+    </div>
+
+    <hr>
+    
+    <form method="GET" class="card card-body mb-4">
+        <h5 class="card-title">Filtros do Extrato</h5>
+        <div class="row g-3">
+            <div class="col-md-2">
+                <label for="mes" class="form-label">Mês Compra:</label>
+                <select name="mes" id="mes" class="form-select form-select-sm">
+                    {% for num, nome in meses %}
+                    <option value="{{ num }}" {% if num == mes_selecionado %}selected{% endif %}>{{ nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="ano" class="form-label">Ano Compra:</label>
+                <select name="ano" id="ano" class="form-select form-select-sm">
+                    {% for ano in anos %}
+                    <option value="{{ ano }}" {% if ano == ano_selecionado %}selected{% endif %}>{{ ano }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="local" class="form-label">Local:</label>
+                <input type="text" name="local" id="local" class="form-control form-control-sm" value="{{ filtros.local|default:'' }}">
+            </div>
+            <div class="col-md-2">
+                <label for="descricao" class="form-label">Descrição:</label>
+                <input type="text" name="descricao" id="descricao" class="form-control form-control-sm" value="{{ filtros.descricao|default:'' }}">
+            </div>
+            <div class="col-md-2">
+                <label for="categoria" class="form-label">Categoria:</label>
+                <select name="categoria" id="categoria" class="form-select form-select-sm">
+                    <option value="">Todas</option>
+                    {% for categoria in todas_categorias %}
+                        <option value="{{ categoria.id }}" {% if categoria.id == filtros.categoria %}selected{% endif %}>
+                            {{ categoria.nome }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+             <div class="col-md-2">
+                <label for="metodo" class="form-label">Método Pgto:</label>
+                <select name="metodo" id="metodo" class="form-select form-select-sm">
+                    <option value="">Todos</option>
+                    {% for valor, nome in todos_metodos %}
+                        <option value="{{ valor }}" {% if valor == filtros.metodo %}selected{% endif %}>
+                            {{ nome }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-12 d-flex justify-content-end mt-2">
+                <button type="submit" class="btn btn-success btn-sm">Filtrar Extrato</button>
+            </div>
+        </div>
+    </form>
+
+    <table class="table table-striped table-hover table-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>Data</th>
+                <th>Local</th>
+                <th>Descrição</th>
+                <th>Método</th>
+                <th>Categoria</th>
+                <th>Valor</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lancamento in lancamentos %}
+            <tr>
+                <td>{{ lancamento.data_compra|date:"d/m/Y" }}</td>
+                <td>{{ lancamento.local_compra }}</td>
+                <td>{{ lancamento.descricao|default:"-" }}</td>
+                <td>
+                    {{ lancamento.metodo_pagamento }}
+                    {% if lancamento.cartao %}
+                        <small class="text-muted d-block">{{ lancamento.cartao.nome }}</small>
+                    {% endif %}
+                </td>
+                <td>{{ lancamento.categoria.nome }}</td>
+                <td>R$ <span class="valor-sensivel"><span class="real">{{ lancamento.valor_total|floatformat:2 }}</span><span class="oculto">****</span></span></td>
+                <td>
+                    <a href="{% url 'editar_lancamento' lancamento.id %}" class="btn btn-warning btn-sm">Editar</a>
+                    <a href="{% url 'deletar_lancamento' lancamento.id %}" class="btn btn-danger btn-sm">Deletar</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center">Nenhum lançamento encontrado para este período com os filtros aplicados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

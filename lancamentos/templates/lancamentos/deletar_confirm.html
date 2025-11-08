@@ -1,0 +1,16 @@
+{% extends 'lancamentos/base.html' %}
+
+{% block title %}Confirmar Deleção{% endblock %}
+
+{% block content %}
+    <h1>Você tem certeza?</h1>
+    <p>Você está prestes a deletar permanentemente o lançamento:</p>
+    <p><strong>"{{ lancamento.local_compra }} - R$ {{ lancamento.valor_total }}"</strong></p>
+    <p>Esta ação não pode ser desfeita.</p>
+
+    <form method="POST">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Sim, tenho certeza</button>
+        <a href="{{ request.META.HTTP_REFERER|default:'/' }}" class="btn btn-secondary">Cancelar</a>
+    </form>
+{% endblock %}
